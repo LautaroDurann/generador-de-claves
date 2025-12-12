@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Generador de Contraseña</title>
+  <style>
+    :root{
+      --bg:#0b0b0f;
+      --card:#141420;
+      --card2:#10101a;
+      --text:#f2f2f7;
+      --muted:#b7b7c7;
+      --gold:#c9a24d;
+      --gold2:#f1d27a;
+      --border:#2a2a3a;
+      --danger:#ff5a6b;
+      --ok:#4ade80;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 20% 0%, #1b1630 0%, transparent 60%),
+                  radial-gradient(1200px 700px at 80% 20%, #1a2a2a 0%, transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .wrap{width:min(980px, 100%); display:grid; gap:16px;}
+    .brand{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .brand .title{
+      font-size:20px; letter-spacing:.4px; font-weight:700;
+    }
+    .brand .badge{
+      border:1px solid var(--border);
+      padding:8px 12px;
+      border-radius:999px;
+      color:var(--gold2);
+      background:rgba(201,162,77,.08);
+      font-size:12px;
+      letter-spacing:.6px;
+      text-transform:uppercase;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+    }
+    @media (max-width: 860px){ .grid{grid-template-columns:1fr;} }
+
+    .card{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), transparent 40%), var(--card);
+      border-radius:18px;
+      padding:18px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+    }
+    .card h2{
+      margin:0 0 10px;
+      font-size:16px;
+      font-weight:700;
+      color:var(--gold2);
+      letter-spacing:.3px;
+    }
+    .hint{color:var(--muted); font-size:13px; margin:0 0 14px; line-height:1.35;}
+    .row{display:grid; gap:10px; margin-top:10px;}
+    label{font-size:12px; color:var(--muted); letter-spacing:.3px;}
+    input, textarea{
+      width:100%;
+      border:1px solid var(--border);
+      background:var(--card2);
+      color:var(--text);
+      padding:12px 12px;
+      border-radius:12px;
+      outline:none;
+      font-size:14px;
+    }
+    textarea{min-height:92px; resize:vertical; line-height:1.35;}
+    input:focus, textarea:focus{
+      border-color: rgba(201,162,77,.75);
+      box-shadow: 0 0 0 3px rgba(201,162,77,.15);
+    }
+    .actions{
+      display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;
+    }
+    button{
+      border:1px solid var(--border);
+      background:rgba(201,162,77,.12);
+      color:var(--gold2);
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:700;
+      letter-spacing:.2px;
+      cursor:pointer;
+      transition: transform .05s ease, background .2s ease;
+    }
+    button:hover{background:rgba(201,162,77,.18)}
+    button:active{transform: translateY(1px)}
+    .secondary{
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+    }
+    .secondary:hover{background:rgba(255,255,255,.09)}
+    .danger{
+      background: rgba(255,90,107,.10);
+      color: #ffd0d6;
+      border-color: rgba(255,90,107,.25);
+    }
+    .danger:hover{background: rgba(255,90,107,.14)}
+    .status{
+      margin-top:10px;
+      font-size:13px;
+      color:var(--muted);
+      min-height:18px;
+    }
+    .status.ok{color:var(--ok)}
+    .status.bad{color:var(--danger)}
+    .out{
+      margin-top:12px;
+      padding:14px;
+      border-radius:14px;
+      border:1px dashed rgba(201,162,77,.45);
+      background: rgba(201,162,77,.07);
+      word-break: break-all;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:14px;
+    }
+    .locked{
+      display:none;
+    }
+    .show{
+      display:block;
+    }
+    .tiny{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:8px;
+      line-height:1.35;
+    }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      border:1px solid var(--border);
+      padding:2px 8px;
+      border-radius:999px;
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <div class="title">Generador de Contraseñas (por reglas)</div>
+      <div class="badge">Acceso protegido</div>
+    </div>
+
+    <div class="grid">
+      <!-- LOGIN -->
+      <div class="card" id="loginCard">
+        <h2>1) Ingresar</h2>
+        <p class="hint">Primero tenés que ingresar la contraseña para acceder a la app.</p>
+
+        <div class="row">
+          <div>
+            <label for="masterPass">Contraseña de acceso</label>
+            <input id="masterPass" type="password" placeholder="Escribí la contraseña…" autocomplete="current-password" />
+          </div>
+
+          <div class="actions">
+            <button id="btnLogin">Entrar</button>
+            <button class="secondary" id="btnToggleMaster">Mostrar/Ocultar</button>
+            <button class="danger" id="btnClearMaster">Limpiar</button>
+          </div>
+
+          <div class="status" id="loginStatus"></div>
+
+          <div class="tiny">
+            Tip: podés apretar <span class="kbd">Enter</span> para entrar.
+          </div>
+        </div>
+      </div>
+
+      <!-- GENERATOR -->
+      <div class="card locked" id="genCard">
+        <h2>2) Generar contraseña</h2>
+
+        <div class="row">
+          <div>
+            <label for="phrase">Frase</label>
+            <textarea id="phrase" placeholder="Ej: No digas la verdad, decí la verdad."></textarea>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div>
+              <label for="year">Año de creación (4 dígitos)</label>
+              <input id="year" type="text" inputmode="numeric" placeholder="Ej: 2025" maxlength="4"/>
+            </div>
+            <div>
+              <label for="site">Sitio</label>
+              <input id="site" type="text" placeholder="Ej: gmail, steam, banco..." />
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="btnGenerate">Generar</button>
+            <button class="secondary" id="btnCopy" disabled>Copiar</button>
+            <button class="danger" id="btnLogout">Salir</button>
+          </div>
+
+          <div class="status" id="genStatus"></div>
+          <div class="out" id="output" style="display:none;"></div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const ACCESS_PASSWORD = "Heisemberg112200##";
+
+  const $ = (id) => document.getElementById(id);
+
+  const loginCard = $("loginCard");
+  const genCard = $("genCard");
+  const masterPass = $("masterPass");
+  const loginStatus = $("loginStatus");
+
+  const phrase = $("phrase");
+  const year = $("year");
+  const site = $("site");
+  const genStatus = $("genStatus");
+  const output = $("output");
+  const btnCopy = $("btnCopy");
+
+  // Helpers
+  function setStatus(el, msg, kind = "") {
+    el.textContent = msg || "";
+    el.className = "status" + (kind ? " " + kind : "");
+  }
+
+  function isValidYear(y) {
+    return /^\d{4}$/.test(y);
+  }
+
+  function first2(y) { return y.slice(0, 2); }
+  function last2(y) { return y.slice(-2); }
+
+  // Tokeniza la frase preservando puntos y comas
+  // Palabras = secuencias unicode de letras/números. Puntuación = . o ,
+  function tokenizePhrase(text) {
+    const t = (text || "").trim();
+    if (!t) return [];
+    const re = /[\p{L}\p{N}]+|[.,]/gu;
+    return t.match(re) || [];
+  }
+
+  function transformWordToken(token) {
+    // Reglas especiales por palabra completa (case-insensitive)
+    const low = token.toLowerCase();
+
+    if (low === "no") return "-";
+    if (low === "verdad") return "1";
+
+    // Si es palabra "normal"
+    const len = token.length;
+    if (len >= 3) {
+      const a = token[0].toUpperCase();
+      const b = token[1].toLowerCase();
+      return a + b;
+    } else {
+      return token[0].toUpperCase();
+    }
+  }
+
+  function buildFromPhrase(phraseText) {
+    const tokens = tokenizePhrase(phraseText);
+
+    let built = "";
+    for (const tk of tokens) {
+      if (tk === "." || tk === ",") {
+        built += tk;
+      } else {
+        built += transformWordToken(tk);
+      }
+    }
+
+    // Terminar con punto (si no lo tiene)
+    if (!built.endsWith(".")) built += ".";
+    return built;
+  }
+
+  function normalizeSite(s) {
+    return (s || "").trim().replace(/\s+/g, "").toUpperCase();
+  }
+
+  function replaceOWithZero(all) {
+    // "o" y "O" a "0"
+    return all.replace(/o/gi, "0");
+  }
+
+  function generatePassword() {
+    const p = (phrase.value || "").trim();
+    const y = (year.value || "").trim();
+    const s = (site.value || "").trim();
+
+    if (!p) return { ok:false, msg:"Te falta la frase." };
+    if (!isValidYear(y)) return { ok:false, msg:"El año debe tener 4 dígitos (ej: 2025)." };
+    if (!s) return { ok:false, msg:"Te falta el sitio." };
+
+    const partYearStart = first2(y);
+    const partPhrase = buildFromPhrase(p);
+    const partSite = normalizeSite(s);
+    const partYearEnd = last2(y);
+
+    let result = partYearStart + partPhrase + partSite + partYearEnd;
+
+    // Reemplazo final de o/O por 0
+    result = replaceOWithZero(result);
+
+    return { ok:true, value: result };
+  }
+
+  // Login
+  function doLogin() {
+    if (masterPass.value === ACCESS_PASSWORD) {
+      setStatus(loginStatus, "Acceso concedido.", "ok");
+      genCard.classList.add("show");
+      genCard.classList.remove("locked");
+      // opcional: limpiar campo acceso
+      masterPass.value = "";
+      setTimeout(() => setStatus(loginStatus, ""), 800);
+      phrase.focus();
+    } else {
+      setStatus(loginStatus, "Contraseña incorrecta.", "bad");
+    }
+  }
+
+  $("btnLogin").addEventListener("click", doLogin);
+  masterPass.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") doLogin();
+  });
+
+  $("btnToggleMaster").addEventListener("click", () => {
+    masterPass.type = masterPass.type === "password" ? "text" : "password";
+  });
+
+  $("btnClearMaster").addEventListener("click", () => {
+    masterPass.value = "";
+    setStatus(loginStatus, "");
+    masterPass.focus();
+  });
+
+  // Generator
+  $("btnGenerate").addEventListener("click", () => {
+    const res = generatePassword();
+    if (!res.ok) {
+      setStatus(genStatus, res.msg, "bad");
+      output.style.display = "none";
+      output.textContent = "";
+      btnCopy.disabled = true;
+      return;
+    }
+
+    setStatus(genStatus, "Contraseña generada.", "ok");
+    output.style.display = "block";
+    output.textContent = res.value;
+    btnCopy.disabled = false;
+  });
+
+  $("btnCopy").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(output.textContent);
+      setStatus(genStatus, "Copiada al portapapeles.", "ok");
+    } catch {
+      setStatus(genStatus, "No se pudo copiar automáticamente (tu navegador lo bloqueó).", "bad");
+    }
+  });
+
+  $("btnLogout").addEventListener("click", () => {
+    genCard.classList.remove("show");
+    genCard.classList.add("locked");
+    setStatus(genStatus, "");
+    output.style.display = "none";
+    output.textContent = "";
+    btnCopy.disabled = true;
+    phrase.value = "";
+    year.value = "";
+    site.value = "";
+    setStatus(loginStatus, "Sesión cerrada.", "ok");
+    masterPass.focus();
+    setTimeout(() => setStatus(loginStatus, ""), 900);
+  });
+
+  // Input: año sólo números
+  year.addEventListener("input", () => {
+    year.value = year.value.replace(/[^\d]/g, "").slice(0,4);
+  });
+})();
+</script>
+</body>
+</html>
